@@ -1,0 +1,336 @@
+
+IF 조건 
+	THEN 처리구문;
+ELSIF 조건
+	THEN  처리구문;
+ELSIF 조건
+	THEN 처리구문;
+ELSE 
+	처리구문;
+END IF
+
+
+DECLARE
+	GRADE CHAR;
+BEGIN
+	GRADE := 'A';
+
+	IF GRADE = 'A'
+		THEN DBMS_OUTPUT.PUT_LINE('아주좋아');
+	ELSIF GRADE = 'B'
+		THEN DBMS_OUTPUT.PUT_LINE('좋아');
+	ELSE 
+		DBMS_OUTPUT.PUT_LINE('분발해');
+	END IF;
+END;
+
+
+CASE문(조건문)
+-- CASE ~ WHEN ~ THEN ~ ELSE ~ END CASE;
+
+CASE 변수
+	WHEN 값1
+		THEN 실행문;
+	WHEN 값2
+		THEN 실행문;
+	ELSE
+		실행문;
+END CASE;
+
+
+DECLARE
+	GRADE CHAR;
+BEGIN
+	GRADE := 'A';
+
+	CASE
+		WHEN 'A'
+			THEN DBMS_OUTPUT.PUT_LINE('오');
+	
+		WHEN 'B'
+			THEN DBMS_OUTPUT.PUT_LINE('호');
+
+		ELSE 
+			DBMS_OUTPUT.PUT_LINE('라');
+	END CASE;
+END;
+
+--외부 입력 처리
+
+1. ACCEPT 문
+-- ACCEPT 변수명 PROMPT '메세지';
+-- 외부 변수로부터 입력받은 데이터를 내부 변수에 전달할때
+-- 『&외부변수명』 형태로 접근하게 된다.
+
+ACCEPT N1 PROMPT '첫 번째 정수를 입력하세요 : ';
+ACCEPT N2 PROMPT '두 번째 정수를 입력하세요 : ';
+
+DECLARE
+	NUM1	NUMBER := &N1;
+	NUM2	NUMBER := &N2;
+	TOTAL	NUMBER := 0;
+BEGIN
+	TOTAL = NUM1 + NUM2;
+	
+	DBMS_OUTPUT.PUT_LINE(NUM1 || '+' || NUM2 || '=' || TOTAL);
+
+END;
+
+
+
+
+
+--■■■ FUNTION(함수) ■■■--
+
+-- 1. 함수란 하나 이상의 PL/SQL 문으로 구성된 서브루틴으로
+--    코드를 다시 사용할 수 있도록 캡슐화 하는데 사용된다.
+--    오라클에서는 오라클에 정의된 기본 제공 함수를 사용하거나
+--    직접 스토어드 함수를 만들 수 있다. (→사용자 정의 함수)
+--    이 사용자 정의 함수는 시스템 함수처럼 쿼리에서 호출하거나
+--    저장 프로시저처럼 EXECUTE 문을 통해 실행할 수 있다.
+
+-- 2. 형식 및 구조
+
+CREATE [OR REPLACE] FUNCTION 함수명
+[(
+    매개변수1 자료형
+  , 매개변수2 자료형
+)]
+RETURN 데이터타입
+IS
+    [--주요 변수 선언(지역 변수)]
+    
+BEGIN  
+    -- 실행문;
+    ...
+    RETURN 값;
+    
+    [EXCEPTION]
+        -- 예외처리 구문
+END;
+
+-- 3. 실행(호출)
+
+함수명[(인수1, 인수2)];
+
+
+--■■■ PROCEDURE(프로시저) ■■■--
+
+-- 1. PL/SQL 에서 가장 대표적인 구조인 스토어드 프로시저는
+--    개발자가 자주 작성해야 하는 업무의 흐름을
+--    미리 작성하여 데이터베이스 내에 저장해두었다가
+--    필요할 때마다 호출하여 실행할 수 있도록 처리해 주는 구문이다.
+
+-- 2. 형식 및 구조
+
+CREATE [OR REPLACE] PROCEDURE 프로시저명
+[( 매개변수 IN 데이터타입
+ , 매개변수 OUT 데이터타입
+ , 매개변수 INOUT 데이터타입
+)]
+IS
+    [--주요 변수 선언;]
+BEGIN
+    -- 실행 구문;
+    ...
+    [EXCEPTION
+        -- 예외 처리 구문;]
+END;
+
+
+--※ FUNCTION 과 비교했을 때...
+--   『RETURN 반환자료형』 부분이 존재하지 않으며,
+--   『RETURN』문 자체도 존재하지 않으며,
+--   프로시저 실행 시 넘겨주게 되는 매개변수의 종류는 
+--   IN, OUT, INOUT 으로 구분된다.
+
+-- 3. 실행(호출)
+
+
+EXEC[UTE] 프로시저명[(인수1, 인수2)];
+
+
+--○ INSERT 쿼리 실행을 프로시저로 작성 (INSERT 프로시저)
+
+
+
+--■예외처리
+
+
+BEGIN
+    EXCEPTION
+        WHEN OTHERS THEN ROLLBACK;
+
+-- 사용자 정의 에러 발생시키고 처리하기
+IS
+USER_DEFINE_ERROR   EXCEPTION;
+
+BEGIN
+-- 프로시저를 통해 입력 처리를 정상적으로 진행해야 할 데이터인지
+-- 아닌지의 여부를 가장 먼저 확인할 수 있도록 코드 구성
+
+	IF 에러가 발생하는 조건
+	  THEN RAISE USER_DEFINE_ERROR;
+	END IF;
+
+-- 실행문...
+
+
+    	EXCEPTION
+        	WHEN USER_DEFINE_ERROR
+            		THEN RAISE_APPLICATION_ERROR(-에러코드, 에러내용기술);
+			     ROLLBACK;
+        	WHEN 저런 예외라면...
+            		THEN 저렇게 처리해라...
+
+
+--■■■ CURSOR(커서) ■■■--
+
+-- 1. 오라클에서 하나의 레코드가 아닌 여러 레코드로 구성된
+--    작업 영역에서 SQL 문을 실행하고 그 과정에서 발생한 정보를
+--    저장하기 위하여 커서(CURSOR)를 사용하며,
+--    커서에는 암시적 커서와 명시적 커서가 있다.
+
+-- 2. 암시적 커서는 모든 SQL 문에 존재하며,
+--    SQL 실행후 오직 하나의 행(ROW)만 출력하게 된다.
+--    그러나 SQL 문을 실행한 결과물(RESULT SET)이
+--    여러 행(ROW)로 구성된 경우
+--    커서(CURSOR)를 명시적으로 선언해야 여러 행(ROW)을 다룰 수 있다.
+
+
+
+DECLARE
+    V_NAME  TBL_INSA.NAME%TYPE;
+    V_TEL   TBL_INSA.TEL%TYPE;
+    
+    -- 커서 이용을 위한 커서변수 선언 (→ 커서 정의)
+    CURSOR CUR_INSA_SELECT
+    IS
+    SELECT NAME, TEL
+    FROM TBL_INSA;
+    
+BEGIN
+    
+    -- 커서 오픈
+    OPEN CUR_INSA_SELECT;
+    
+    -- 커서 오픈시 쏟아져 나오는 데이터들 처리(잡아내기)
+    LOOP
+        -- 한 행 한행 끄집어내어 가져오는 행위 → 『FETCH』
+        FETCH CUR_INSA_SELECT INTO V_NAME, V_TEL;
+        
+        EXIT WHEN CUR_INSA_SELECT%NOTFOUND;
+        
+        -- 출력
+        
+        DBMS_OUTPUT.PUT_LINE(V_NAME || ', ' || V_TEL);
+        
+    END LOOP;
+    
+    -- 커서 클로즈
+    CLOSE CUR_INSA_SELECT;
+END;
+
+ 
+--■■■ TRIGGER(트리거) ■■■--
+
+-- 사전적인 의미 : 방아쇠, 촉발시키다, 야기하다, 유발하다.
+
+-- 1. TRIGGER(트리거)란 DML 작업, INSERT, UPDATE, DELETE 와 같은 작업이 일어날 때
+--    자동으로 실행되는(유발되는, 촉발되는) 객체로
+--    이와 같은 특징을 강조하여(부각시켜) DML TRIGGER 라고 부르기도 한다.
+--    TRIGGER 는 데이터 무결성 뿐 아니라
+--    다음과 같은 작업에도 널리 사용된다.
+
+--    ·자동으로 파생된 열 값 생성
+--    ·잘못된 트랜잭션 방지
+--    ·복잡한 보안 권한 강제 수행
+--    ·분산 데이터베이스 노드 상에서 참조 무결성 강제 수행
+--    ·복잡한 업무 규칙 강제 적용
+--    ·복잡한 감사 제공
+--    ·동기 테이블 복제 유지관리
+--    ·테이블 액세스 통계 수집
+
+-- 2. TRIGGER 내에서는 COMMIT, ROLLBACK 문을 사용할 수 없다.
+
+-- 3. 특징 및 종류
+
+--    ·BEFORE STATEMENT TRIGGER
+--      SQL 구문이 실행되기 전에 그 문장에 대해 한 번 실행
+--    ·BEFORE ROW TRIGGER
+--      SQL 구문이 실행되기 전에 (DML 작업을 수행하기 전에)
+--      각 행(ROW)에 대해 한 번씩 실행
+--    ·AFTER STATEMENT TRIGGER
+--      SQL 구문이 실행된 후 그 문장에 대해 한 번 실행
+--    ·AFTER ROW TRIGGER
+--      SQL 구문이 실행된 후에(DML 작업을 수행한 후에)
+--      각 행(ROW)에 대해 한 번씩 실행
+
+-- 4. 형식 및 구조
+
+/*
+CREATE [OR REPLACE] TRIGGER 트리거명
+    [BEFORE] | [AFTER]
+    이벤트1 [OR 이벤트2 [OR 이벤트3]] ON 테이블명
+    [FOR EACH ROW [WHEN TRIGGER 조건]]
+[DECLARE]
+    -- 선언 구문;
+
+
+
+--■■■ PACKAGE(패키지) ■■■--
+
+-- 핵심키워드: 논리적인 묶음
+
+-- 1. PL/SQL 의 패키지는 관계되는 타입, 프로그램 객체,
+--    서브 프로그램(PROCEDURE, FUNCTION 등) 을
+--    논리적으로 묶어놓은 것으로
+--    오라클에서 제공하는 패키지 중 하나가 바로 『DBMS_OUTPUT』이다.
+
+
+-- 2. 패키지는 서로 유사한 업무에 사용되는 여러 개의 프로시저와 함수를
+--    하나의 패키지로 만들어 관리함으로써 향후 유지보수가 편리하고
+--    전체 프로그램을 모듈화 할 수 있는 장점이 있다.
+
+-- 3.  패키지는 명세부(PACKAGE SPECTIFICATION)와 
+--     몸체부(PACKAGE BODY)로 구성되어 있으며,
+--     명세 부분에는 TYPE, CONSTRAINT. VARIABLE, EXCEPTION, CURSOR,
+--     SUBPROGRAM 이 선언되고
+--     몸체 부분에는 이들의 실제 내용이 존재 하게 된다.
+--     그리고 호출할 때에는 『패키지명.프로시저명』형식의 참조를 이용해야 한다.
+
+-- 4. 형식 및 구조(명세부)
+/*
+CREATE [OR REPLACE] PACKAGE 패키지명
+IS
+    전역 변수 선언;
+    커서 선언;
+    예외 선언;
+    함수 선언;
+    프로시저 선언;
+    : 
+END 패키지명;
+*/
+
+-- 5. 형식 및 구조(몸체부)
+/*
+CREATE [OR REPLACE] PACKAGE BODY 패키지명
+IS 
+    FUNCTION 함수명[(인수, ...)]
+    RETURN 자료형
+    IS
+        변수 선언;
+    BEGIN
+        함수 몸체 구성 코드;
+        RETURN 값;
+    END;
+    
+    PROCEDURE 프로시저명[(인수, ...)]
+    IS
+        변수 선언;
+    BEGIN
+        프로시저 몸체 구성 코드;
+    END;
+    
+END 패키지명;
+*/
